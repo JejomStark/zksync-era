@@ -110,7 +110,6 @@ async fn test_node_witness_gen() {
     compare_serialized(&expected_aggregation, &aggregations);
 }
 
-#[ignore = "For manual running only"]
 #[tokio::test]
 async fn test_basic_witness_gen() {
     let object_store_config = ObjectStoreConfig {
@@ -129,6 +128,8 @@ async fn test_basic_witness_gen() {
 
     let input = object_store.get(block_number).await.unwrap();
 
+    let instant = Instant::now();
     let (_circuit_urls, _queue_urls, _scheduler_witness, _aux_output_witness) =
         generate_witness(block_number, &*object_store, input).await;
+    println!("Generated witness, {:?}", instant.elapsed());
 }

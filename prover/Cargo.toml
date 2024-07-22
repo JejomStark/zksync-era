@@ -56,9 +56,9 @@ tracing-subscriber = { version = "0.3" }
 vise = "0.1.0"
 
 # Proving dependencies
-circuit_definitions = "=0.150.1"
-circuit_sequencer_api = "=0.150.1"
-zkevm_test_harness = "=0.150.1"
+circuit_definitions = { path = "../../era-zkevm_test_harness/circuit_definitions" }
+circuit_sequencer_api = { path = "../../era-zkevm_test_harness/circuit_sequencer_api" }
+zkevm_test_harness = { path = "../../era-zkevm_test_harness" }
 
 # GPU proving dependencies
 wrapper_prover = { package = "zksync-wrapper-prover", version = "=0.140.0-gpu-wrapper.0" }
