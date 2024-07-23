@@ -49,3 +49,4 @@ jemallocator = "0.5"
 
 [dev-dependencies]
 const-decoder = "0.3.0"
+peak_alloc = "0.2.0"
