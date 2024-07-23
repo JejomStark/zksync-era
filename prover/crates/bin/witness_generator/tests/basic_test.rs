@@ -138,9 +138,12 @@ async fn test_basic_witness_gen() {
     print_peak_mem_snapshots();
 }
 
+use std::{
+    sync::{Mutex, OnceLock},
+    time::Duration,
+};
+
 use peak_alloc::PeakAlloc;
-use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
 
 #[global_allocator]
 static PEAK_ALLOC: PeakAlloc = PeakAlloc;
