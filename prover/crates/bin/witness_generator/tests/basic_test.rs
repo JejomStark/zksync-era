@@ -124,7 +124,7 @@ async fn test_basic_witness_gen() {
         .await
         .unwrap();
 
-    let block_number = L1BatchNumber(10783);
+    let block_number = L1BatchNumber(489509);
 
     let input = object_store.get(block_number).await.unwrap();
 
