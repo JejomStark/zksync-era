@@ -511,7 +511,7 @@ impl FriWitnessGeneratorDal<'_, '_> {
         Ok(attempts)
     }
 
-    async fn prover_job_ids_for(
+    pub async fn prover_job_ids_for(
         &mut self,
         block_number: L1BatchNumber,
         circuit_id: u8,
