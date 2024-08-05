@@ -3,10 +3,7 @@
 
 use anyhow::Context;
 use zksync_config::{
-    configs::{
-        consensus::ConsensusConfig, eth_sender::PubdataSendingMode, wallets::Wallets,
-        GeneralConfig, Secrets,
-    },
+    configs::{eth_sender::PubdataSendingMode, wallets::Wallets, GeneralConfig, Secrets},
     ContractsConfig, GenesisConfig,
 };
 use zksync_core_leftovers::Component;
@@ -86,7 +83,6 @@ pub struct MainNodeBuilder {
     genesis_config: GenesisConfig,
     contracts_config: ContractsConfig,
     secrets: Secrets,
-    consensus_config: Option<ConsensusConfig>,
 }
 
 impl MainNodeBuilder {
@@ -96,17 +92,19 @@ impl MainNodeBuilder {
         genesis_config: GenesisConfig,
         contracts_config: ContractsConfig,
         secrets: Secrets,
-        consensus_config: Option<ConsensusConfig>,
-    ) -> Self {
-        Self {
-            node: ZkStackServiceBuilder::new(),
+    ) -> anyhow::Result<Self> {
+        Ok(Self {
+            node: ZkStackServiceBuilder::new().context("Cannot create ZkStackServiceBuilder")?,
             configs,
             wallets,
             genesis_config,
             contracts_config,
             secrets,
-            consensus_config,
-        }
+        })
+    }
+
+    pub fn runtime_handle(&self) -> tokio::runtime::Handle {
+        self.node.runtime_handle()
     }
 
     fn add_sigint_handler_layer(mut self) -> anyhow::Result<Self> {
@@ -144,7 +142,7 @@ impl MainNodeBuilder {
         self.node.add_layer(PKSigningEthClientLayer::new(
             eth_config,
             self.contracts_config.clone(),
-            self.genesis_config.l1_chain_id,
+            self.genesis_config.settlement_layer_id(),
             wallets,
         ));
         Ok(self)
@@ -154,7 +152,7 @@ impl MainNodeBuilder {
         let genesis = self.genesis_config.clone();
         let eth_config = try_load_config!(self.secrets.l1);
         let query_eth_client_layer =
-            QueryEthClientLayer::new(genesis.l1_chain_id, eth_config.l1_rpc_url);
+            QueryEthClientLayer::new(genesis.settlement_layer_id(), eth_config.l1_rpc_url);
         self.node.add_layer(query_eth_client_layer);
         Ok(self)
     }
@@ -456,6 +454,7 @@ impl MainNodeBuilder {
     fn add_consensus_layer(mut self) -> anyhow::Result<Self> {
         self.node.add_layer(MainNodeConsensusLayer {
             config: self
+                .configs
                 .consensus_config
                 .clone()
                 .context("Consensus config has to be provided")?,
@@ -594,7 +593,7 @@ impl MainNodeBuilder {
             .add_query_eth_client_layer()?
             .add_storage_initialization_layer(LayerKind::Task)?;
 
-        Ok(self.node.build()?)
+        Ok(self.node.build())
     }
 
     /// Builds the node with the specified components.
@@ -706,7 +705,7 @@ impl MainNodeBuilder {
                 }
             }
         }
-        Ok(self.node.build()?)
+        Ok(self.node.build())
     }
 }
 

@@ -39,7 +39,7 @@ pub fn run(args: EcosystemCreateArgs, shell: &Shell) -> anyhow::Result<()> {
 }
 
 fn create(args: EcosystemCreateArgs, shell: &Shell) -> anyhow::Result<()> {
-    let args = args.fill_values_with_prompt();
+    let args = args.fill_values_with_prompt(shell);
 
     logger::note(MSG_SELECTED_CONFIG, logger::object_to_string(&args));
     logger::info(MSG_CREATING_ECOSYSTEM);
@@ -107,7 +107,7 @@ fn create(args: EcosystemCreateArgs, shell: &Shell) -> anyhow::Result<()> {
     if args.start_containers {
         let spinner = Spinner::new(MSG_STARTING_CONTAINERS_SPINNER);
         initialize_docker(shell, &ecosystem_config)?;
-        start_containers(shell)?;
+        start_containers(shell, false)?;
         spinner.finish();
     }
 

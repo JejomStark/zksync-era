@@ -5,16 +5,13 @@ const IMAGES = [
     'server-v2',
     'external-node',
     'contract-verifier',
-    'prover-v2',
     'local-node',
     'zk-environment',
     'circuit-synthesizer',
     'witness-generator',
-    'prover-fri',
     'prover-gpu-fri',
     'witness-vector-generator',
     'prover-fri-gateway',
-    'proof-fri-compressor',
     'proof-fri-gpu-compressor',
     'snapshots-creator',
     'verified-sources-fetcher'
@@ -75,13 +72,7 @@ function defaultTagList(image: string, imageTagSha: string, imageTagShaTS: strin
         'server-v2',
         'external-node',
         'contract-verifier',
-        'witness-generator',
-        'prover-fri',
-        'prover-gpu-fri',
-        'witness-vector-generator',
         'prover-fri-gateway',
-        'proof-fri-compressor',
-        'proof-fri-gpu-compressor',
         'snapshots-creator'
     ].includes(image)
         ? ['latest', 'latest2.0', `2.0-${imageTagSha}`, `${imageTagSha}`, `2.0-${imageTagShaTS}`, `${imageTagShaTS}`]
@@ -90,9 +81,7 @@ function defaultTagList(image: string, imageTagSha: string, imageTagShaTS: strin
     if (
         protocolVersionTag &&
         [
-            'proof-fri-compressor',
             'proof-fri-gpu-compressor',
-            'prover-fri',
             'prover-fri-gateway',
             'prover-gpu-fri',
             'witness-generator',
@@ -123,22 +112,16 @@ async function _build(image: string, tagList: string[], dockerOrg: string, platf
     if (platform != '') {
         buildArgs += `--platform=${platform} `;
     }
-    if (image === 'prover-v2') {
-        const eraBellmanCudaRelease = process.env.ERA_BELLMAN_CUDA_RELEASE;
-        buildArgs += `--build-arg ERA_BELLMAN_CUDA_RELEASE=${eraBellmanCudaRelease} `;
-    }
     if (image === 'prover-gpu-fri') {
         const cudaArch = process.env.CUDA_ARCH;
         buildArgs += `--build-arg CUDA_ARCH='${cudaArch}' `;
     }
     buildArgs += extraArgs;
 
-    const imagePath = image === 'prover-v2' ? 'prover' : image;
-
     const buildCommand =
         `DOCKER_BUILDKIT=1 docker buildx build ${tagsToBuild}` +
         (buildArgs ? ` ${buildArgs}` : '') +
-        ` -f ./docker/${imagePath}/Dockerfile .`;
+        ` -f ./docker/${image}/Dockerfile .`;
 
     await utils.spawn(buildCommand);
 }

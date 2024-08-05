@@ -9,10 +9,13 @@ use zkevm_test_harness::{
 };
 use zksync_config::{configs::object_store::ObjectStoreMode, ObjectStoreConfig};
 use zksync_object_store::ObjectStoreFactory;
-use zksync_prover_dal::{ConnectionPool, Prover, ProverDal};
-use zksync_prover_fri_types::keys::AggregationsKey;
+use zksync_prover_fri_types::{
+    keys::{AggregationsKey, FriCircuitKey},
+    CircuitWrapper,
+};
 use zksync_prover_fri_utils::get_recursive_layer_circuit_id_for_base_layer;
 use zksync_types::{
+    basic_fri_types::AggregationRound,
     prover_dal::{LeafAggregationJobMetadata, NodeAggregationJobMetadata},
     url::SensitiveUrl,
     L1BatchNumber,
@@ -1843,7 +1846,13 @@ async fn test_leaf_witness_gen() {
             .await
             .unwrap();
 
-        let artifacts = LeafAggregationWitnessGenerator::process_job_sync(job, Instant::now());
+        let artifacts = LeafAggregationWitnessGenerator::process_job_impl(
+            job,
+            Instant::now(),
+            object_store.clone(),
+            100,
+        )
+        .await;
 
         snapshot_prof("BEFORE SAVE");
         save_artifacts(artifacts, &*object_store).await;
@@ -1875,15 +1884,7 @@ async fn test_node_witness_gen() {
 
     let circuit_id = 8;
     let block_number = L1BatchNumber(127856);
-    let key = AggregationsKey {
-        block_number,
-        circuit_id,
-        depth: 1,
-    };
-    let expected_aggregation = object_store
-        .get::<AggregationWrapper>(key)
-        .await
-        .expect("expected aggregation missing");
+
     let node_aggregation_job_metadata = NodeAggregationJobMetadata {
         id: 1,
         block_number,
@@ -1896,7 +1897,9 @@ async fn test_node_witness_gen() {
         .await
         .unwrap();
 
-    let artifacts = NodeAggregationWitnessGenerator::process_job_sync(job, Instant::now());
+    let artifacts =
+        NodeAggregationWitnessGenerator::process_job_impl(job, Instant::now(), object_store, 500)
+            .await;
     //let aggregations = AggregationWrapper(artifacts.next_aggregations);
     //compare_serialized(&expected_aggregation, &aggregations);
 }
@@ -1923,7 +1926,7 @@ async fn test_basic_witness_gen() {
 
     //snapshot_prof("Before run");
     let (_circuit_urls, _queue_urls, _scheduler_witness, _aux_output_witness) =
-        generate_witness(block_number, &*object_store, input).await;
+        generate_witness(block_number, object_store, input, 500).await;
     //snapshot_prof("After run");
     println!("Generated witness, {:?}", instant.elapsed());
     //print_peak_mem_snapshots();
