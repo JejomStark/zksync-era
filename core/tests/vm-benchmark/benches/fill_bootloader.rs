@@ -29,7 +29,12 @@ use zksync_vm_benchmark_harness::{
 /// Gas limit for deployment transactions.
 const DEPLOY_GAS_LIMIT: u32 = 30_000_000;
 /// Tested numbers of transactions in a batch.
-const TXS_IN_BATCH: &[usize] = &[1, 10, 50, 100, 200, 500, 1_000, 2_000, 5_000];
+const TXS_IN_BATCH: &[usize] = if cfg!(test) {
+    &[1, 10, 50] // Reduce the number of transactions in a batch so that tests don't take long
+} else {
+    &[1, 10, 50, 100, 200, 500, 1_000, 2_000, 5_000]
+};
+
 /// RNG seed used e.g. to randomize failing transactions.
 const RNG_SEED: u64 = 123;
 /// Probability for a transaction to fail in the `transfer_with_invalid_nonce` benchmarks.
